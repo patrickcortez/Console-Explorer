@@ -9,7 +9,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
-using System.Diagnostics;
 
 
 namespace Console
@@ -17,40 +16,13 @@ namespace Console
     public partial class Form1 : Form
     {
 
-        Process shell;
+
         public Form1()
         {
             InitializeComponent();
             lb_path.Text = currentDirectory.FullName;
-
-            var psi = new ProcessStartInfo
-            {
-                FileName = "linuxify.exe",
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            shell = new Process();
-            shell.StartInfo = psi;
-
-            shell.OutputDataReceived += (s, e) =>
-            {
-                if (!string.IsNullOrEmpty(e.Data))
-                    Invoke(new Action(() => print(e.Data)));
-            };
-
-            shell.ErrorDataReceived += (s, e) =>
-            {
-                if (!string.IsNullOrEmpty(e.Data))
-                    Invoke(new Action(() => print(e.Data)));
-            };
-
-            shell.Start();
-            shell.BeginOutputReadLine();
-            shell.BeginErrorReadLine();
+            rtb_output.Text = "Welcome to File System Console" + Environment.NewLine;
+            rtb_output.Text += "Type 'help' to begin exploring!" + Environment.NewLine + Environment.NewLine;
         }
 
         string input = string.Empty;
@@ -64,7 +36,6 @@ namespace Console
 
         private void btn_submit_Click(object sender, EventArgs e)
         {
-            shell.StandardInput.WriteLine(input);
             input = tb_input1.Text;
             mainLoop();
             tb_input1.Text = string.Empty;
@@ -73,10 +44,13 @@ namespace Console
         private void help()
         {
             print("Available Commands:");
-                print("echo <text> - Prints the text to the console.");
-                print("clear - Clears the console output.");
-                print("current - Displays the current directory.");
-                print("change <directory-path> - Changes the current directory to the specified path.");
+            print("echo <text> - Prints the text to the console.");
+            print("clear - Clears the console output.");
+            print("current - Displays the current directory.");
+            print("change <directory-path> - Changes the current directory to the specified path.");
+            print("list <directory-path> - Lists all the files in the directory");
+            print("create <file/directory> <name> - Creates a file or directory.");
+            print("delete <file/directory> <name> - Deletes a file or directory.");
         }
 
         private void mainLoop()
@@ -85,8 +59,9 @@ namespace Console
             if (cmd[0].ToLower() == "echo")
             {
                 print(string.Join(" ", cmd.Skip(1)));
-            } 
-            else if (cmd[0].ToLower() == "clear") {
+            }
+            else if (cmd[0].ToLower() == "clear")
+            {
                 rtb_output.Text = string.Empty;
             }
             else if (cmd[0].ToLower() == "current")
@@ -95,7 +70,7 @@ namespace Console
             }
             else if (cmd[0].ToLower() == "change")
             {
-                if(cmd.Length < 2)
+                if (cmd.Length < 2)
                 {
                     print("Usage: change <directory-path>");
                     return;
@@ -105,12 +80,12 @@ namespace Console
 
                 if (Path.IsPathRooted(cmd[1])) //if its an Absolute path
                 {
-     
+
                     newPath = cmd[1];
                 }
                 else // Relative path
                 {
-                   
+
                     newPath = Path.Combine(currentDirectory.FullName, cmd[1]);
                 }
 
@@ -124,36 +99,94 @@ namespace Console
 
                 currentDirectory = newDir;
                 lb_path.Text = currentDirectory.FullName;
-            } else if(cmd[0].ToLower() == "help")
+            }
+            else if (cmd[0].ToLower() == "help")
             {
                 help();
             }
-            else if (cmd[0].ToLower() == "./")
+            else if (cmd[0].ToLower() == "list")
             {
-                string exeName = cmd[0].Substring(2);
+                var path = Path.Combine(currentDirectory.FullName, cmd[1]);
 
-                if (cmd[0].Length == 0)
+                var listf = Directory.GetFiles(path);
+                var listd = Directory.GetDirectories(path);
+
+                foreach (var dir in listd)
                 {
-                    print("Usage: ./<exe-file>");
-                    return;
+                    print("[DIR] " + Path.GetFileName(dir));
                 }
 
-                var exePath = Path.Combine(currentDirectory.FullName, exeName);
+                print(Environment.NewLine);
 
-                if(!File.Exists(exePath))
+                foreach (var file in listf)
                 {
-                    print("Executable not found: " + exePath);
-                    return;
+                    print("[FILE] " + Path.GetFileName(file));
                 }
 
-
-                
-                
             }
-            else
+            else if (cmd[0].ToLower() == "create")
             {
-                print("Unknown Command: " + cmd[0]);
-                shell.StandardInput.WriteLine(input);
+                var path = Path.Combine(currentDirectory.FullName, cmd[2]);
+
+                if (cmd.Length < 3)
+                {
+                    print("Usage: create <file/directory> <name>");
+                }
+
+                if (cmd[1].ToLower() == "file")
+                {
+                    File.Create(path).Close();
+                    print("File: " + cmd[2] + " created successfully.");
+                }
+                else if (cmd[1].ToLower() == "directory")
+                {
+                    Directory.CreateDirectory(path);
+                    print("Directory: " + cmd[2] + " created successfully.");
+                }
+                else
+                {
+                    print(cmd[2] + " failed to be created.");
+                }
+            }
+            else if (cmd[0].ToLower() == "delete")
+            {
+                var path = Path.Combine(currentDirectory.FullName, cmd[2]);
+
+                if (cmd.Length < 3)
+                {
+                    print("Usage: " + "delete <file/directory> <name>");
+                }
+
+                if (cmd[1].ToLower() == "file")
+                {
+                    if (File.Exists(path))
+                    {
+                        File.Delete(path);
+                        print("File: " + cmd[2] + " deleted successfully.");
+                    }
+                    else
+                    {
+
+                        print("File: " + cmd[2] + " does not exist.");
+                    }
+                }
+                else if (cmd[1].ToLower() == "directory")
+                {
+                    if (Directory.Exists(path))
+                    {
+                        Directory.Delete(path, true);
+                        print("Directory: " + cmd[2] + " deleted successfully.");
+                    }
+                    else
+                    {
+                        print("Directory: " + cmd[2] + " does not exist.");
+                    }
+                }
+                else
+                {
+                    print("Unknown Command: " + cmd[0]);
+
+                }
             }
         }
     }

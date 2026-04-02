@@ -43,11 +43,11 @@
             // 
             // rtb_output
             // 
-            this.rtb_output.BackColor = System.Drawing.Color.White;
-            this.rtb_output.Enabled = false;
-            this.rtb_output.ForeColor = System.Drawing.Color.Black;
+            this.rtb_output.BackColor = System.Drawing.Color.Black;
+            this.rtb_output.ForeColor = System.Drawing.Color.White;
             this.rtb_output.Location = new System.Drawing.Point(12, 12);
             this.rtb_output.Name = "rtb_output";
+            this.rtb_output.ReadOnly = true;
             this.rtb_output.Size = new System.Drawing.Size(776, 398);
             this.rtb_output.TabIndex = 1;
             this.rtb_output.Text = "";
@@ -65,9 +65,11 @@
             // lb_path
             // 
             this.lb_path.AutoSize = true;
+            this.lb_path.Font = new System.Drawing.Font("Gentium Book Basic", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lb_path.ForeColor = System.Drawing.SystemColors.Control;
             this.lb_path.Location = new System.Drawing.Point(137, 447);
             this.lb_path.Name = "lb_path";
-            this.lb_path.Size = new System.Drawing.Size(44, 16);
+            this.lb_path.Size = new System.Drawing.Size(54, 20);
             this.lb_path.TabIndex = 3;
             this.lb_path.Text = "label1";
             // 
@@ -75,13 +77,14 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(800, 472);
             this.Controls.Add(this.lb_path);
             this.Controls.Add(this.btn_submit);
             this.Controls.Add(this.rtb_output);
             this.Controls.Add(this.tb_input1);
             this.Name = "Form1";
-            this.Text = "GameConsole";
+            this.Text = "File-System-Console";
             this.ResumeLayout(false);
             this.PerformLayout();
 
