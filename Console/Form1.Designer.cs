@@ -91,17 +91,18 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Black;
-            this.ClientSize = new System.Drawing.Size(858, 472);
-            this.ControlBox = false;
+            this.ClientSize = new System.Drawing.Size(858, 501);
             this.Controls.Add(this.rtb_log);
             this.Controls.Add(this.lb_path);
             this.Controls.Add(this.btn_submit);
             this.Controls.Add(this.rtb_output);
             this.Controls.Add(this.tb_input1);
-            this.MinimumSize = new System.Drawing.Size(818, 519);
+            this.MaximizeBox = false;
+            this.MaximumSize = new System.Drawing.Size(876, 548);
+            this.MinimumSize = new System.Drawing.Size(876, 548);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "File-System-Console";
+            this.Text = "Console Explorer";
             this.ResumeLayout(false);
             this.PerformLayout();
 

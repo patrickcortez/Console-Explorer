@@ -23,37 +23,79 @@ namespace Console
         bool correct = false;
         int traverse = 0;
 
+        string GetHistoryPath()
+        {
+            string tmp = Environment.GetEnvironmentVariable("APPDATA");
+
+            if (!string.IsNullOrEmpty(tmp))
+            {
+                return tmp;
+            }
+
+            return AppDomain.CurrentDomain.BaseDirectory;
+        }
+
+        string GetAssetsFolder()
+        {
+            string assets = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets");
+            if (!Directory.Exists(assets))
+            {
+                MessageBox.Show("Assets Folder Missing!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return string.Empty;
+            }
+
+            return assets;
+            
+
+        }
+
         private void init()
         {
-            if (Directory.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"db")))
+            if (Directory.Exists(Path.Combine(GetHistoryPath(),"db")))
             {
-                if(File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "db", "history.txt")))
+                if(File.Exists(Path.Combine(GetHistoryPath(), "db", "history.txt")))
                 {
-
                     return;
                 }
-                File.Create(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "db", "history.txt")).Close();
+                File.Create(Path.Combine(GetHistoryPath(), "db", "history.txt")).Close();
             }
             else
             {
 
-                Directory.CreateDirectory(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "db"));
-                File.Create(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "db", "history.txt")).Close();
+                Directory.CreateDirectory(Path.Combine(GetHistoryPath(), "db"));
+                File.Create(Path.Combine(GetHistoryPath(), "db", "history.txt")).Close();
             }
         }
 
         public Form1()
         {
-            InitializeComponent();
-            init();
-            ReadHistory();
-            lb_path.Text = currentDirectory.FullName;
-            rtb_log.Text += "CLI" + Environment.NewLine + "Logs:" + Environment.NewLine;
-            rtb_output.Text = "Welcome to File System Console" + Environment.NewLine;
-            rtb_output.Text += "Type 'help' to begin exploring!" + Environment.NewLine + Environment.NewLine;
-            string[] cmds = { "echo","exit","copy","create","move","export","delete","clear","change","list","current","help" };
-            syntax.AddRange(cmds);
-            
+            try
+            {
+                InitializeComponent();
+                init();
+                ReadHistory();
+                lb_path.Text = currentDirectory.FullName;
+                rtb_log.Text += "CLI" + Environment.NewLine + "Logs:" + Environment.NewLine;
+                rtb_output.Text = "Welcome to File System Console" + Environment.NewLine;
+                rtb_output.Text += "Type 'help' to begin exploring!" + Environment.NewLine + Environment.NewLine;
+                string[] cmds = { "echo", "exit", "copy", "create", "move", "export", "delete", "clear", "change", "list", "current", "help" };
+                syntax.AddRange(cmds);
+
+                var assets = GetAssetsFolder();
+
+                if (!string.IsNullOrEmpty(assets))
+                {
+                   
+                    this.Icon = new Icon(Path.Combine(assets, "terminal.ico"));
+                }
+                else
+                {
+                    MessageBox.Show("Icon file missing, Reverting to default...", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         bool isInSyntax(string input)
@@ -73,7 +115,7 @@ namespace Console
 
         private void ReadHistory()
         {
-            string historyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "db", "history.txt");
+            string historyPath = Path.Combine(GetHistoryPath(), "db", "history.txt");
             if (File.Exists(historyPath))
             {
                 foreach(var line in File.ReadAllLines(historyPath))
@@ -101,7 +143,7 @@ namespace Console
 
         private void WriteHistory(string command)
         {
-            string historyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "db", "history.txt");
+            string historyPath = Path.Combine(GetHistoryPath(), "db", "history.txt");
             File.AppendAllText(historyPath, command + Environment.NewLine);
         }
 
@@ -173,295 +215,303 @@ namespace Console
 
         private void mainLoop()
         {
-            string[] cmd = input.Split(' ');
+            try
+            {
+                string[] cmd = input.Split(' ');
 
-            setArray(ref cmd);
-            if (cmd[0].ToLower() == "echo")
-            {
-                string output = string.Join(" ", cmd.Skip(1));
-                print(output);
-            }
-            else if (cmd[0].ToLower() == "clear")
-            {
-                rtb_output.Text = string.Empty;
-            }
-            else if (cmd[0].ToLower() == "current")
-            {
-                print(currentDirectory.FullName);
-            }
-            else if (cmd[0].ToLower() == "change")
-            {
-                if (cmd.Length < 2)
+                setArray(ref cmd);
+                if (cmd[0].ToLower() == "echo")
                 {
-                    print("Usage: change <directory-path>");
-                    correct = false;
-                    return;
+                    string output = string.Join(" ", cmd.Skip(1));
+                    print(output);
                 }
-
-                string newPath;
-
-                if (Path.IsPathRooted(cmd[1])) //if its an Absolute path
+                else if (cmd[0].ToLower() == "clear")
                 {
-
-                    newPath = cmd[1];
+                    rtb_output.Text = string.Empty;
                 }
-                else // Relative path
+                else if (cmd[0].ToLower() == "current")
                 {
-
-                    newPath = Path.Combine(currentDirectory.FullName, cmd[1]);
+                    print(currentDirectory.FullName);
                 }
-
-                var newDir = new DirectoryInfo(newPath);
-
-                if (!newDir.Exists)
+                else if (cmd[0].ToLower() == "change")
                 {
-                    print("Directory does not exist: " + newPath);
-                    correct = false;
-                    return;
+                    if (cmd.Length < 2)
+                    {
+                        print("Usage: change <directory-path>");
+                        correct = false;
+                        return;
+                    }
+
+                    string newPath;
+
+                    if (Path.IsPathRooted(cmd[1])) //if its an Absolute path
+                    {
+
+                        newPath = cmd[1];
+                    }
+                    else // Relative path
+                    {
+
+                        newPath = Path.Combine(currentDirectory.FullName, cmd[1]);
+                    }
+
+                    var newDir = new DirectoryInfo(newPath);
+
+                    if (!newDir.Exists)
+                    {
+                        print("Directory does not exist: " + newPath);
+                        correct = false;
+                        return;
+                    }
+
+                    currentDirectory = newDir;
+                    lb_path.Text = currentDirectory.FullName;
                 }
-
-                currentDirectory = newDir;
-                lb_path.Text = currentDirectory.FullName;
-            }
-            else if (cmd[0].ToLower() == "help")
-            {
-                help();
-            }
-            else if (cmd[0].ToLower() == "list")
-            {
-
-                if (cmd.Length < 2)
+                else if (cmd[0].ToLower() == "help")
                 {
-                    var tpath = currentDirectory.FullName;
-                        
-                    var tlistf = Directory.GetFiles(tpath);
-                    var tlistd = Directory.GetDirectories(tpath);
+                    help();
+                }
+                else if (cmd[0].ToLower() == "list")
+                {
 
-                    foreach(var dir in tlistd)
+                    if (cmd.Length < 2)
+                    {
+                        var tpath = currentDirectory.FullName;
+
+                        var tlistf = Directory.GetFiles(tpath);
+                        var tlistd = Directory.GetDirectories(tpath);
+
+                        foreach (var dir in tlistd)
+                        {
+                            print("[DIR] " + Path.GetFileName(dir));
+                        }
+
+                        foreach (var file in tlistf)
+                        {
+                            print("[FILE] " + Path.GetFileName(file));
+                        }
+
+                        return;
+                    }
+
+                    var path = Path.Combine(currentDirectory.FullName, cmd[1]);
+
+                    if (!Directory.Exists(path))
+                    {
+                        print("Directory does not exist: " + path);
+                        correct = false;
+                        return;
+                    }
+
+                    var listf = Directory.GetFiles(path);
+                    var listd = Directory.GetDirectories(path);
+
+                    foreach (var dir in listd)
                     {
                         print("[DIR] " + Path.GetFileName(dir));
                     }
 
-                    foreach(var file in tlistf)
+                    print(Environment.NewLine);
+
+                    foreach (var file in listf)
                     {
                         print("[FILE] " + Path.GetFileName(file));
                     }
 
-                    return;
                 }
-
-                var path = Path.Combine(currentDirectory.FullName, cmd[1]);
-
-                if(!Directory.Exists(path))
+                else if (cmd[0].ToLower() == "create")
                 {
-                    print("Directory does not exist: " + path);
-                    correct = false;
-                    return;
-                }
 
-                var listf = Directory.GetFiles(path);
-                var listd = Directory.GetDirectories(path);
+                    var path = Path.Combine(currentDirectory.FullName, cmd[2]);
 
-                foreach (var dir in listd)
-                {
-                    print("[DIR] " + Path.GetFileName(dir));
-                }
 
-                print(Environment.NewLine);
-
-                foreach (var file in listf)
-                {
-                    print("[FILE] " + Path.GetFileName(file));
-                }
-
-            }
-            else if (cmd[0].ToLower() == "create")
-            {
-                
-                var path = Path.Combine(currentDirectory.FullName, cmd[2]);
-           
-
-                if (cmd.Length < 3)
-                {
-                    print("Usage: create <file/directory> <name>");
-                    correct = false;
-                }
-
-                if(File.Exists(path) || Directory.Exists(path))
-                {
-                    print("File or Directory already exists: " + cmd[2]);
-                    correct = false;
-                    return;
-                }
-
-                if (cmd[1].ToLower() == "file")
-                {
                     if (cmd.Length < 3)
                     {
-                        print("File name cant be empty!");
+                        print("Usage: create <file/directory> <name>");
+                        correct = false;
+                    }
+
+                    if (File.Exists(path) || Directory.Exists(path))
+                    {
+                        print("File or Directory already exists: " + cmd[2]);
                         correct = false;
                         return;
                     }
-                    File.Create(path).Close();
-                    print("File: " + cmd[2] + " created successfully.");
+
+                    if (cmd[1].ToLower() == "file")
+                    {
+                        if (cmd.Length < 3)
+                        {
+                            print("File name cant be empty!");
+                            correct = false;
+                            return;
+                        }
+                        File.Create(path).Close();
+                        print("File: " + cmd[2] + " created successfully.");
+                    }
+                    else if (cmd[1].ToLower() == "directory")
+                    {
+                        if (cmd.Length < 3)
+                        {
+                            print("Folder name cant be empty!");
+                            correct = false;
+                            return;
+                        }
+                        Directory.CreateDirectory(path);
+                        print("Directory: " + cmd[2] + " created successfully.");
+                    }
+                    else
+                    {
+                        print(cmd[2] + " failed to be created.");
+                        correct = false;
+                    }
                 }
-                else if (cmd[1].ToLower() == "directory")
+                else if (cmd[0].ToLower() == "delete")
                 {
+                    var path = Path.Combine(currentDirectory.FullName, cmd[2]);
+
                     if (cmd.Length < 3)
                     {
-                        print("Folder name cant be empty!");
+                        print("Usage: " + "delete <file/directory> <name>");
+                        correct = false;
+                    }
+
+                    if (cmd[1].ToLower() == "file")
+                    {
+                        if (File.Exists(path))
+                        {
+                            File.Delete(path);
+                            print("File: " + cmd[2] + " deleted successfully.");
+                        }
+                        else
+                        {
+
+                            print("File: " + cmd[2] + " does not exist.");
+                            correct = false;
+                        }
+                    }
+                    else if (cmd[1].ToLower() == "directory")
+                    {
+                        if (Directory.Exists(path))
+                        {
+                            Directory.Delete(path, true);
+                            print("Directory: " + cmd[2] + " deleted successfully.");
+                        }
+                        else
+                        {
+                            print("Directory: " + cmd[2] + " does not exist.");
+                            correct = false;
+                        }
+                    }
+
+                }
+                else if (cmd[0].ToLower() == "copy")
+                {
+
+
+                    string src;
+                    string dest;
+
+                    if (Path.IsPathRooted(cmd[1]))
+                    {
+                        src = cmd[1];
+                    }
+                    else
+                    {
+                        src = Path.Combine(currentDirectory.FullName, cmd[1]);
+                    }
+
+                    if (Path.IsPathRooted(cmd[2]))
+                    {
+                        dest = cmd[2];
+                    }
+                    else
+                    {
+                        dest = Path.Combine(currentDirectory.FullName, cmd[2]);
+                    }
+
+                    if (File.Exists(src))
+                    {
+                        File.Copy(src, dest);
+                        print("Copy: " + cmd[1] + " to " + cmd[2] + " copy successful!");
+                    }
+                    else
+                    {
+                        print("File:" + cmd[1] + " does not exist.");
+                        correct = false;
+                    }
+                }
+                else if (cmd[0].ToLower() == "move")
+                {
+                    string src;
+                    string desc;
+
+                    if (Path.IsPathRooted(cmd[1]))
+                    {
+                        src = cmd[1];
+                    }
+                    else
+                    {
+                        src = Path.Combine(currentDirectory.FullName, cmd[1]);
+                    }
+
+                    if (Path.IsPathRooted(cmd[2]))
+                    {
+                        desc = cmd[2];
+                    }
+                    else
+                    {
+                        desc = Path.Combine(currentDirectory.FullName, cmd[2]);
+                    }
+
+
+                    if (File.Exists(src))
+                    {
+                        File.Move(src, desc);
+                        print("Move: " + cmd[1] + " to " + cmd[2] + " move successful!");
+
+                    }
+                    else
+                    {
+                        print("File:" + cmd[1] + " does not exist.");
+                        correct = false;
+                    }
+                }
+                else if (cmd[0].ToLower() == "exit")
+                {
+                    Application.Exit();
+                }
+                else if (cmd[0].ToLower() == "export")
+                {
+                    if (cmd.Length < 2)
+                    {
+                        print("Usage: export <varname>=<value>");
                         correct = false;
                         return;
                     }
-                    Directory.CreateDirectory(path);
-                    print("Directory: " + cmd[2] + " created successfully.");
-                }
-                else
-                {
-                    print(cmd[2] + " failed to be created.");
-                    correct = false;
-                }
-            }
-            else if (cmd[0].ToLower() == "delete")
-            {
-                var path = Path.Combine(currentDirectory.FullName, cmd[2]);
 
-                if (cmd.Length < 3)
-                {
-                    print("Usage: " + "delete <file/directory> <name>");
-                    correct = false;
-                }
+                    var parts = cmd[1].Split('=');
 
-                if (cmd[1].ToLower() == "file")
-                {
-                    if (File.Exists(path))
+                    if (parts.Length < 2)
                     {
-                        File.Delete(path);
-                        print("File: " + cmd[2] + " deleted successfully.");
-                    }
-                    else
-                    {
-
-                        print("File: " + cmd[2] + " does not exist.");
+                        print("Value cant be empty!");
                         correct = false;
+                        return;
                     }
-                }
-                else if (cmd[1].ToLower() == "directory")
-                {
-                    if (Directory.Exists(path))
-                    {
-                        Directory.Delete(path, true);
-                        print("Directory: " + cmd[2] + " deleted successfully.");
-                    }
-                    else
-                    {
-                        print("Directory: " + cmd[2] + " does not exist.");
-                        correct = false;
-                    }
-                }
-                
-            }
-            else if (cmd[0].ToLower() == "copy")
-            {
 
+                    Environment.SetEnvironmentVariable(parts[0], parts[1]);
 
-                string src;
-                string dest;
+                    print("Environment variable set!");
 
-                if (Path.IsPathRooted(cmd[1]))
-                {
-                    src = cmd[1];
                 }
                 else
                 {
-                    src = Path.Combine(currentDirectory.FullName, cmd[1]);
-                }
-
-                if(Path.IsPathRooted(cmd[2]))
-                {
-                    dest = cmd[2];
-                }
-                else
-                {
-                    dest = Path.Combine(currentDirectory.FullName, cmd[2]);
-                }
-
-                if (File.Exists(src))
-                {
-                    File.Copy(src, dest);
-                    print("Copy: " + cmd[1] + " to " + cmd[2] + " copy successful!");
-                }
-                else
-                {
-                    print("File:" + cmd[1] + " does not exist.");
+                    print("Unknown Command: " + cmd[0]);
                     correct = false;
                 }
-            }else if (cmd[0].ToLower() == "move")
+            }catch(Exception ex)
             {
-                string src;
-                string desc;
-
-                if (Path.IsPathRooted(cmd[1]))
-                {
-                    src = cmd[1];
-                }
-                else
-                {
-                    src = Path.Combine(currentDirectory.FullName, cmd[1]);
-                }
-
-                if(Path.IsPathRooted(cmd[2]))
-                {
-                    desc = cmd[2];
-                }
-                else
-                {
-                    desc = Path.Combine(currentDirectory.FullName, cmd[2]);
-                }
-
-
-                if (File.Exists(src))
-                {
-                    File.Move(src, desc);
-                    print("Move: " + cmd[1] + " to " + cmd[2] + " move successful!");
-
-                }
-                else
-                {
-                    print("File:" + cmd[1] + " does not exist.");
-                    correct = false;
-                }
-            } else if (cmd[0].ToLower() == "exit")
-            {
-                Application.Exit();
-            }
-            else if (cmd[0].ToLower() == "export")
-            {
-                if(cmd.Length < 2)
-                {
-                    print("Usage: export <varname>=<value>");
-                    correct = false;
-                    return;
-                }
-
-                var parts = cmd[1].Split('=');
-
-                if(parts.Length < 2)
-                {
-                    print("Value cant be empty!");
-                    correct = false;
-                    return;
-                }
-
-                Environment.SetEnvironmentVariable(parts[0], parts[1]);
-
-                print("Environment variable set!");
-
-            }
-            else
-            {
-                print("Unknown Command: " + cmd[0]);
-                correct = false;
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
