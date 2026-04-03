@@ -32,20 +32,22 @@
             this.rtb_output = new System.Windows.Forms.RichTextBox();
             this.btn_submit = new System.Windows.Forms.Button();
             this.lb_path = new System.Windows.Forms.Label();
+            this.rtb_log = new System.Windows.Forms.RichTextBox();
             this.SuspendLayout();
             // 
             // tb_input1
             // 
-            this.tb_input1.Location = new System.Drawing.Point(140, 416);
+            this.tb_input1.Location = new System.Drawing.Point(198, 416);
             this.tb_input1.Name = "tb_input1";
             this.tb_input1.Size = new System.Drawing.Size(648, 22);
             this.tb_input1.TabIndex = 0;
+            this.tb_input1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tb_input1_KeyDown);
             // 
             // rtb_output
             // 
             this.rtb_output.BackColor = System.Drawing.Color.Black;
             this.rtb_output.ForeColor = System.Drawing.Color.White;
-            this.rtb_output.Location = new System.Drawing.Point(12, 12);
+            this.rtb_output.Location = new System.Drawing.Point(70, 12);
             this.rtb_output.Name = "rtb_output";
             this.rtb_output.ReadOnly = true;
             this.rtb_output.Size = new System.Drawing.Size(776, 398);
@@ -54,7 +56,7 @@
             // 
             // btn_submit
             // 
-            this.btn_submit.Location = new System.Drawing.Point(12, 416);
+            this.btn_submit.Location = new System.Drawing.Point(69, 415);
             this.btn_submit.Name = "btn_submit";
             this.btn_submit.Size = new System.Drawing.Size(122, 23);
             this.btn_submit.TabIndex = 2;
@@ -67,23 +69,38 @@
             this.lb_path.AutoSize = true;
             this.lb_path.Font = new System.Drawing.Font("Gentium Book Basic", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lb_path.ForeColor = System.Drawing.SystemColors.Control;
-            this.lb_path.Location = new System.Drawing.Point(137, 447);
+            this.lb_path.Location = new System.Drawing.Point(197, 441);
             this.lb_path.Name = "lb_path";
             this.lb_path.Size = new System.Drawing.Size(54, 20);
             this.lb_path.TabIndex = 3;
             this.lb_path.Text = "label1";
+            // 
+            // rtb_log
+            // 
+            this.rtb_log.BackColor = System.Drawing.Color.Black;
+            this.rtb_log.ForeColor = System.Drawing.Color.White;
+            this.rtb_log.Location = new System.Drawing.Point(3, 12);
+            this.rtb_log.Name = "rtb_log";
+            this.rtb_log.ReadOnly = true;
+            this.rtb_log.Size = new System.Drawing.Size(61, 398);
+            this.rtb_log.TabIndex = 4;
+            this.rtb_log.Text = "";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Black;
-            this.ClientSize = new System.Drawing.Size(800, 472);
+            this.ClientSize = new System.Drawing.Size(858, 472);
+            this.ControlBox = false;
+            this.Controls.Add(this.rtb_log);
             this.Controls.Add(this.lb_path);
             this.Controls.Add(this.btn_submit);
             this.Controls.Add(this.rtb_output);
             this.Controls.Add(this.tb_input1);
+            this.MinimumSize = new System.Drawing.Size(818, 519);
             this.Name = "Form1";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "File-System-Console";
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -96,6 +113,7 @@
         private System.Windows.Forms.RichTextBox rtb_output;
         private System.Windows.Forms.Button btn_submit;
         private System.Windows.Forms.Label lb_path;
+        private System.Windows.Forms.RichTextBox rtb_log;
     }
 }
 
