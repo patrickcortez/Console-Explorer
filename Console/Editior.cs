@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.Design;
 using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +17,7 @@ namespace Console
     public partial class Editior : Form
     {
         private string fpath;
-        bool currEmpty = false;
+        private bool currEmpty = false,changes = false;
         
         public Editior(string tpath)
         {
@@ -45,10 +47,38 @@ namespace Console
                 
                 File.WriteAllText(fpath, rtb_edit.Text);
             }
+
+            changes = false;
+        }
+
+         ~Editior()
+        {
+            changes = false;
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (changes)
+            {
+               DialogResult res = MessageBox.Show("Are you sure you wont save your changes?", "Information", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if(res == DialogResult.Yes)
+                {
+                    if (currEmpty)
+                    {
+                        saveAsToolStripMenuItem.PerformClick();
+                    }
+                    else
+                    {
+                        saveToolStripMenuItem.PerformClick();
+                    }
+                }
+                else
+                {
+                    this.Close();
+                }
+            }
+
             this.Close();
         }
 
@@ -69,6 +99,7 @@ namespace Console
 
                     
                 }
+            changes = false;
             
         }
 
@@ -94,6 +125,34 @@ namespace Console
         private void aboutConsoleExplorerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             MessageBox.Show("A C# Application made by Cortez," + Environment.NewLine + "A 3rd year Computer Engineering Student.", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void Editior_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void rtb_edit_TextChanged(object sender, EventArgs e)
+        {
+            changes = true;
+        }
+
+        private void Editior_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Control && e.KeyCode == Keys.Q)
+            {
+                e.Handled = true;
+                this.Close();
+
+            }else if (e.Control && e.KeyCode == Keys.S)
+            {
+                e.Handled = true;
+                saveToolStripMenuItem.PerformClick();
+            }else if (e.Control && e.Shift && e.KeyCode == Keys.S)
+            {
+                e.Handled = true;
+                saveAsToolStripMenuItem.PerformClick();
+            }
         }
     }
 }

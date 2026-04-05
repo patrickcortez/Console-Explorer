@@ -20,6 +20,8 @@ your variables in any command with ease.
 it has its own *Text Editor* and *Image Viewer*, so you can edit text files and view images instantly 
 while using **Console Explorer**.
 
+
+
 ---
 
 ## ScreenShot

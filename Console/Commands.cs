@@ -55,6 +55,23 @@ namespace Console
             }
         }
 
+        private void InitializeComponent()
+        {
+            this.SuspendLayout();
+            // 
+            // ImageForm
+            // 
+            this.ClientSize = new System.Drawing.Size(282, 253);
+            this.Name = "ImageForm";
+            this.Load += new System.EventHandler(this.ImageForm_Load);
+            this.ResumeLayout(false);
+
+        }
+
+        private void ImageForm_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 
     class Commands
@@ -159,6 +176,8 @@ namespace Console
 
             hasexec = true;
         }
+
+ 
 
         internal bool getexec()
         {

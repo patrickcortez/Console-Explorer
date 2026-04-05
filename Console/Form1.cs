@@ -571,8 +571,15 @@ namespace Console
                         dest = Path.Combine(currentDirectory.FullName, cmd[2]);
                     }
 
-                    if (File.Exists(src))
+                    if (File.Exists(src) || Directory.Exists(src))
                     {
+                        char[] pref = { '-' };
+                        if (Utility.GetFlag(cmd[3], pref) == 'r')
+                        {
+                            Utility.CopyDirectory(src, dest);
+                            return;
+                        }
+
                         dest = Path.Combine(dest, Path.GetFileName(src));
                         File.Copy(src, dest);
                         print("Copy: " + cmd[1] + " to " + cmd[2] + " copy successful!");
@@ -607,8 +614,14 @@ namespace Console
                     }
 
 
-                    if (File.Exists(src))
+                    if (File.Exists(src) || Directory.Exists(src))
                     {
+                        char[] pref = { '-' };
+
+                        if (Utility.GetFlag(cmd[3],pref) == 'r')
+                        {
+                            Directory.Move(src,dest);
+                        }
                         dest = Path.Combine(dest, Path.GetFileName(src));
                         File.Move(src, dest);
                         print("Move: " + cmd[1] + " to " + cmd[2] + " move successful!");

@@ -50,6 +50,7 @@
             this.rtb_edit.Size = new System.Drawing.Size(763, 446);
             this.rtb_edit.TabIndex = 0;
             this.rtb_edit.Text = "";
+            this.rtb_edit.TextChanged += new System.EventHandler(this.rtb_edit_TextChanged);
             // 
             // mn_editor
             // 
@@ -79,21 +80,21 @@
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(143, 26);
             this.saveToolStripMenuItem.Text = "Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
             // saveAsToolStripMenuItem
             // 
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(143, 26);
             this.saveAsToolStripMenuItem.Text = "Save As";
             this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(143, 26);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -124,14 +125,14 @@
             // lightToolStripMenuItem
             // 
             this.lightToolStripMenuItem.Name = "lightToolStripMenuItem";
-            this.lightToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.lightToolStripMenuItem.Size = new System.Drawing.Size(125, 26);
             this.lightToolStripMenuItem.Text = "Light";
             this.lightToolStripMenuItem.Click += new System.EventHandler(this.lightToolStripMenuItem_Click);
             // 
             // darkToolStripMenuItem
             // 
             this.darkToolStripMenuItem.Name = "darkToolStripMenuItem";
-            this.darkToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.darkToolStripMenuItem.Size = new System.Drawing.Size(125, 26);
             this.darkToolStripMenuItem.Text = "Dark";
             this.darkToolStripMenuItem.Click += new System.EventHandler(this.darkToolStripMenuItem_Click);
             // 
@@ -146,6 +147,8 @@
             this.Controls.Add(this.mn_editor);
             this.Name = "Editior";
             this.Text = "Text Editior";
+            this.Load += new System.EventHandler(this.Editior_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Editior_KeyDown);
             this.mn_editor.ResumeLayout(false);
             this.mn_editor.PerformLayout();
             this.ResumeLayout(false);
