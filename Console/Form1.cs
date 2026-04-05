@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
+using System.Drawing.Text;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Messaging;
 using System.Windows.Forms;
-using System.IO;
-
 
 namespace Console
 {
+
     public partial class Form1 : Form
     {
 
@@ -45,7 +44,7 @@ namespace Console
             string assets = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets");
             if (!Directory.Exists(assets))
             {
-                print("Warning: " + "Asset Folder is Missing!");
+                print("Warning: " + "Asset Folder is Missing!",false,true);
                 return string.Empty;
             }
 
@@ -85,6 +84,7 @@ namespace Console
                 rtb_output.Text += "Type 'help' to begin exploring!" + Environment.NewLine + Environment.NewLine;
                 string[] cmds = { "echo", "exit", "copy", "create", "move", "export", "delete", "clear", "change", "list", "current", "help" };
                 syntax.AddRange(cmds);
+                
    
                 var assets = GetAssetsFolder();
 
@@ -95,7 +95,7 @@ namespace Console
                 }
                 else
                 {
-                    print("Warning: Icon File is missing!");
+                    print("Warning: Icon File is missing!",false,true);
                 }
             }catch(Exception ex)
             {
@@ -133,7 +133,7 @@ namespace Console
             }
             else
             {
-                print("Failed to read history");
+                print("Failed to read history",true);
             }
         }
 
@@ -155,9 +155,29 @@ namespace Console
         DirectoryInfo currentDirectory = new DirectoryInfo(Environment.GetEnvironmentVariable("USERPROFILE"));
 
 
-        void print(string text) // so I dont have to  manually type that long ass code
+        void print(string text,bool isError = false,bool isWarning = false) // so I dont have to  manually type that long ass code
         {
-            rtb_output.Text += text + Environment.NewLine;
+            rtb_output.SelectionStart = rtb_output.TextLength;
+            rtb_output.SelectionLength = 0;
+
+            if(isError == true)
+            {
+                rtb_output.SelectionColor = Color.Red;
+            } else if(isWarning == true)
+            {
+                rtb_output.SelectionColor = Color.Yellow;
+            }
+            else
+            {
+                rtb_output.SelectionColor = rtb_output.ForeColor;
+            }
+
+            
+
+
+            rtb_output.AppendText(text + Environment.NewLine);
+
+
         }
 
         private void WriteHistory(string command) // Store user input to the history file, so we have a functional history system
@@ -189,6 +209,7 @@ namespace Console
             print("move <src> <dest> - moves a file/folder to a destination");
             print("export <var>=<value> - exports env var.");
             print("edit <file-path> - edit any text files.");
+            print("view <file-path> - view any image in your FS");
             print("exit - Exits the application.");
         }
 
@@ -233,24 +254,68 @@ namespace Console
             }
         }
 
+ 
+
         List<Delegate> Acts() //for sending methods to Commands.cs so this file doesnt become a god file,
         {
+
+         
             List<Delegate> tmp = new List<Delegate>();
-            tmp.Add(new Action<string>(s => print(s)));
+            tmp.Add(new Action<string,bool,bool>((s,v,d) => print(s,v,d)));
+            tmp.Add(new Action<string>(c => getInput())); 
+            
             return tmp; 
         }
+
 
         private void MapInit(Commands comd) // Initializer for future commands
         { // This is where we put our future commands in, by adding them to the Dict
             //test commands
-            commands.Add("Test",comd.Test);
+            commands.Add("test",comd.Test);
             commands.Add("input", comd.TestInput);
+            commands.Add("view", comd.showImage);
 
         }
 
         private void mainMap(string inp) // Our command executor for other commands
         {
+
+            bool isvalid = false;
+
+            foreach(var keys in commands.Keys)
+            {
+                if (inp == keys)
+                {
+                    isvalid = true;
+                    break;
+                }
+            }
+
+
+            if(isvalid == false) // guard clause so exception wont trigger
+            {
+                return;
+            }
+
             commands[inp]();
+        }
+
+        private string getInput()
+        {
+            return tb_input1.Text;
+        }
+
+        private string handleQoute(string[] arr)
+        {
+            string tmp = string.Empty;
+
+            if (arr[0].Contains('"'))
+            {
+                tmp = string.Join(" ", arr.Skip(1));
+                tmp = tmp.Trim('"');
+            }
+
+            return tmp;
         }
 
         private void mainLoop() //this is slowly becoming a god function, I must do something about it.
@@ -283,6 +348,11 @@ namespace Console
                         return;
                     }
 
+                    if (cmd[1].Contains('"'))
+                    {
+                        handleQoute(cmd);
+                    }
+
                     string newPath;
 
                     if (Path.IsPathRooted(cmd[1])) //if its an Absolute path
@@ -300,7 +370,7 @@ namespace Console
 
                     if (!newDir.Exists)
                     {
-                        print("Directory does not exist: " + newPath);
+                        print("Directory does not exist: " + newPath,true);
                         correct = false;
                         return;
                     }
@@ -335,11 +405,16 @@ namespace Console
                         return;
                     }
 
+                    if (cmd[1].Contains('"'))
+                    {
+                        handleQoute(cmd);
+                    }
+
                     var path = Path.Combine(currentDirectory.FullName, cmd[1]);
 
                     if (!Directory.Exists(path))
                     {
-                        print("Directory does not exist: " + path);
+                        print("Directory does not exist: " + path,true);
                         correct = false;
                         return;
                     }
@@ -363,6 +438,11 @@ namespace Console
                 else if (cmd[0].ToLower() == "create")
                 {
 
+                    if (cmd[2].Contains('"'))
+                    {
+                        handleQoute(cmd);
+                    }
+
                     var path = Path.Combine(currentDirectory.FullName, cmd[2]);
 
 
@@ -374,7 +454,7 @@ namespace Console
 
                     if (File.Exists(path) || Directory.Exists(path))
                     {
-                        print("File or Directory already exists: " + cmd[2]);
+                        print("File or Directory already exists: " + cmd[2],true);
                         correct = false;
                         return;
                     }
@@ -383,7 +463,7 @@ namespace Console
                     {
                         if (cmd.Length < 3)
                         {
-                            print("File name cant be empty!");
+                            print("File name cant be empty!",true);
                             correct = false;
                             return;
                         }
@@ -394,7 +474,7 @@ namespace Console
                     {
                         if (cmd.Length < 3)
                         {
-                            print("Folder name cant be empty!");
+                            print("Folder name cant be empty!",true);
                             correct = false;
                             return;
                         }
@@ -403,12 +483,17 @@ namespace Console
                     }
                     else
                     {
-                        print(cmd[2] + " failed to be created.");
+                        print(cmd[2] + " failed to be created.",true);
                         correct = false;
                     }
                 }
                 else if (cmd[0].ToLower() == "delete")
                 {
+                    if (cmd[2].Contains('"'))
+                    {
+                        handleQoute(cmd);
+                    }
+
                     var path = Path.Combine(currentDirectory.FullName, cmd[2]);
 
                     if (cmd.Length < 3)
@@ -427,7 +512,7 @@ namespace Console
                         else
                         {
 
-                            print("File: " + cmd[2] + " does not exist.");
+                            print("File: " + cmd[2] + " does not exist.",true);
                             correct = false;
                         }
                     }
@@ -440,7 +525,7 @@ namespace Console
                         }
                         else
                         {
-                            print("Directory: " + cmd[2] + " does not exist.");
+                            print("Directory: " + cmd[2] + " does not exist.",true);
                             correct = false;
                         }
                     }
@@ -448,7 +533,7 @@ namespace Console
                 }
                 else if (cmd[0].ToLower() == "copy")
                 {
-
+ 
 
                     string src;
                     string dest;
@@ -478,7 +563,7 @@ namespace Console
                     }
                     else
                     {
-                        print("File:" + cmd[1] + " does not exist.");
+                        print("File:" + cmd[1] + " does not exist.",true);
                         correct = false;
                     }
                 }
@@ -575,7 +660,7 @@ namespace Console
                 else
                 {
                     bool hasexec = false;
-                    Commands comd = new Commands(Acts(),hasexec,cmd);
+                    Commands comd = new Commands(Acts(),hasexec,cmd,currentDirectory.ToString());
 
                     commands.Clear();
                     MapInit(comd);
@@ -585,14 +670,14 @@ namespace Console
 
                     if (comd.getexec() == false)
                     {
-                        print("Unknown Command: " + cmd[0]);
+                        print("Unknown Command: " + cmd[0],true);
                         correct = false;
                     }
                 }
             }catch(Exception ex)
             {
                 //MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                print("Error: " + ex.Message);
+                print("Error: " + ex.Message,true);
             }
         }
 
@@ -652,6 +737,11 @@ namespace Console
             }
         }
 
+        
 
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }
