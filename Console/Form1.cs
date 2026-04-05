@@ -7,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Messaging;
+using System.Web.UI.WebControls;
 using System.Windows.Forms;
 
 namespace Console
@@ -20,6 +21,7 @@ namespace Console
         Dictionary<int, char> log = new Dictionary<int, char>();
         Dictionary<string, Action> commands = new Dictionary<string, Action>();
         string[] delgate;
+        string username = Path.GetFileName(Environment.GetEnvironmentVariable("USERPROFILE"));
          
         int line = 1;
         bool correct = false;
@@ -49,6 +51,8 @@ namespace Console
             }
 
             return assets;
+
+            
             
 
         }
@@ -84,7 +88,7 @@ namespace Console
                 rtb_output.Text += "Type 'help' to begin exploring!" + Environment.NewLine + Environment.NewLine;
                 string[] cmds = { "echo", "exit", "copy", "create", "move", "export", "delete", "clear", "change", "list", "current", "help" };
                 syntax.AddRange(cmds);
-                
+
    
                 var assets = GetAssetsFolder();
 
@@ -153,7 +157,7 @@ namespace Console
 
         string input = string.Empty;
         DirectoryInfo currentDirectory = new DirectoryInfo(Environment.GetEnvironmentVariable("USERPROFILE"));
-
+        bool isUser = false;
 
         void print(string text,bool isError = false,bool isWarning = false) // so I dont have to  manually type that long ass code
         {
@@ -172,10 +176,20 @@ namespace Console
                 rtb_output.SelectionColor = rtb_output.ForeColor;
             }
 
-            
+            string uname;
+
+            if (isUser && !isError)
+            {
+                uname = username;
+                isUser = !isUser;
+            }
+            else
+            {
+                uname = "System";
+            }
 
 
-            rtb_output.AppendText(text + Environment.NewLine);
+            rtb_output.AppendText($"{uname}> {text}" + Environment.NewLine);
 
 
         }
@@ -322,7 +336,7 @@ namespace Console
         {
             try
             {
-                string[] cmd = input.Split(' '); //our simple tokenizer
+                string[] cmd = Utility.TokenizeString(input); //our simple tokenizer
 
                 setArray(ref cmd);
                 // And this is the start of our long ass if else command Evaluator
@@ -687,6 +701,7 @@ namespace Console
             {
                 e.Handled = true; // prevent the beep sound
                 btn_submit.PerformClick(); // trigger the button click event
+                isUser = true;
             }
 
             if (e.KeyCode == Keys.Up)
@@ -721,6 +736,7 @@ namespace Console
 
             else if(e.KeyCode == Keys.ControlKey && e.KeyCode == Keys.C)
             {
+                
                 if (!string.IsNullOrEmpty(rtb_output.Text))
                 {
                     Clipboard.SetText(rtb_output.SelectedText);

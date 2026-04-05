@@ -12,13 +12,52 @@ namespace Console
         {
             string tmp = string.Empty;
 
-            if (arr[0].Contains('"'))
+            if (arr[0].Contains('\"'))
             {
                 tmp = string.Join(" ", arr.Skip(1));
-                tmp = tmp.Trim('"');
+                tmp = tmp.Trim('\"');
             }
 
             return tmp;
+        }
+
+        public static string[] TokenizeString(string input) // this is our new tokenizer, that handles qoutes by using a boolean to check each character for qoutes
+        {
+            List<string> Tokens = new List<string>(); // we store each token we find in the tokenization loop
+            StringBuilder word = new StringBuilder();
+            bool isQoutes = false;
+            
+            foreach(char c in input) // Our Tokenization loop
+            {
+                if(c == '"') // if we encounter a qoute we trigger our isQoutes by reversing its value then if we reach an end qoute it beautifully sets it to false =D recording the entire string
+                {
+                    isQoutes = !isQoutes;
+                    continue;
+                }
+                
+                if(c == ' ' && !isQoutes) // once we reach an empty space that isnt a qoute we finally add the 'word' to our list and clear the string builder
+                {
+                    if(word.Length > 0) // our guard clause 
+                    {
+                        Tokens.Add(word.ToString());
+                        word.Clear();
+                    }
+                   
+                }
+                else // extensible logic here
+                {
+                    word.Append(c);
+                   
+                }
+
+            }
+
+            if(word.Length > 0) // final check for the last token
+            {
+                Tokens.Add(word.ToString());
+            }
+
+            return Tokens.ToArray(); //Finally return the entire list
         }
     }
 }

@@ -97,6 +97,7 @@
             this.Controls.Add(this.btn_submit);
             this.Controls.Add(this.rtb_output);
             this.Controls.Add(this.tb_input1);
+            this.HelpButton = true;
             this.MaximizeBox = false;
             this.MaximumSize = new System.Drawing.Size(876, 548);
             this.MinimumSize = new System.Drawing.Size(876, 548);
