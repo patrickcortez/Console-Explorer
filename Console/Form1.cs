@@ -288,6 +288,7 @@ namespace Console
             print("edit <file-path> - edit any text files.");
             print("view <file-path> - view any image in your FS");
             print("exit - Exits the application.");
+            print("run <path-to-script.csc> - Run a csc file for automation");
             print("Note: Double click any node in Directory View to insert node name into your input.");
         }
 
