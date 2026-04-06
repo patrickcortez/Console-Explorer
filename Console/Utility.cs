@@ -35,7 +35,7 @@ namespace Console
          */
 
 
-        public static void CopyDirectory(string source,string destination,bool ranOnce = true) // Recursive Copy of Directories
+        public static void CopyDirectory(string source, string destination, bool ranOnce = true) // Recursive Copy of Directories
         {
             try
             {
@@ -43,7 +43,7 @@ namespace Console
                 {
                     DialogResult res = MessageBox.Show("Are you sure you want to proceed?", "Info", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
 
-                    if(res == DialogResult.No)
+                    if (res == DialogResult.No)
                     {
                         return;
                     }
@@ -59,7 +59,7 @@ namespace Console
                     Directory.CreateDirectory(destination);
                 }
 
-       
+
 
 
                 var dirs = new DirectoryInfo(source); // we grab all the info in the source directory 
@@ -74,10 +74,10 @@ namespace Console
                 {
                     string ndir = Path.Combine(source, subdir.Name);
                     string ndes = Path.Combine(destination, subdir.Name);
-                    CopyDirectory(ndir, ndes,false); //repeat, with the ranOnce flag turned to false =D
+                    CopyDirectory(ndir, ndes, false); //repeat, with the ranOnce flag turned to false =D
                 }
 
-            }catch(Exception ex)
+            } catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -87,33 +87,33 @@ namespace Console
             List<string> Tokens = new List<string>(); // we store each token we find in the tokenization loop
             StringBuilder word = new StringBuilder();
             bool isQoutes = false;
-            
-            foreach(char c in input) // Our Tokenization loop
+
+            foreach (char c in input) // Our Tokenization loop
             {
-                if(c == '"') // if we encounter a qoute we trigger our isQoutes by reversing its value then if we reach an end qoute it beautifully sets it to false =D recording the entire string
+                if (c == '"') // if we encounter a qoute we trigger our isQoutes by reversing its value then if we reach an end qoute it beautifully sets it to false =D recording the entire string
                 {
                     isQoutes = !isQoutes;
                     continue;
                 }
-                
-                if(c == ' ' && !isQoutes) // once we reach an empty space that isnt a qoute we finally add the 'word' to our list and clear the string builder
+
+                if (c == ' ' && !isQoutes) // once we reach an empty space that isnt a qoute we finally add the 'word' to our list and clear the string builder
                 { //this is also extensible for later
-                    if(word.Length > 0) // our guard clause 
+                    if (word.Length > 0) // our guard clause 
                     {
                         Tokens.Add(word.ToString());
                         word.Clear();
                     }
-                   
+
                 }
                 else // extensible logic here
                 {
                     word.Append(c);
-                   
+
                 }
 
             }
 
-            if(word.Length > 0) // final check for the last token
+            if (word.Length > 0) // final check for the last token
             {
                 Tokens.Add(word.ToString());
             }
@@ -133,9 +133,9 @@ namespace Console
             char[] braces = { '{', '(', '[' };
             bool found = false;
 
-            foreach(char c in braces)
+            foreach (char c in braces)
             {
-                if(inp == c)
+                if (inp == c)
                 {
                     found = true;
                     break;
@@ -153,12 +153,36 @@ namespace Console
             Braces.Add('[', ']');
 
 
-            if(!Braces.ContainsKey(input)){
+            if (!Braces.ContainsKey(input)) {
                 return null;
             }
 
             return Braces[input];
         }
+
+        public static bool hasUnwanted(string data)
+        {
+            if (data.Contains("NTUSER") == true || data.Contains("ntuser") == true)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static string ReplaceWord(string data,string oldWord,string newWord,char prefix)
+        {
+            oldWord = string.Concat(prefix, oldWord);
+            StringBuilder nString = new StringBuilder(data);
+            if (data.Contains(oldWord))
+            {
+                nString.Replace(oldWord, newWord);
+            }
+
+            return nString.ToString();
+        }
+
+        
 
 
     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Console
@@ -10,17 +11,23 @@ namespace Console
 
     public partial class Form1 : Form
     {
-
+        TaskCompletionSource<string> inputHandler;
         List<string> history = new List<string>();
         List<string> syntax = new List<string>();
         Dictionary<int, char> log = new Dictionary<int, char>();
         Dictionary<string, Action> commands = new Dictionary<string, Action>();
-        string[] delgate;
         string username = Path.GetFileName(Environment.GetEnvironmentVariable("USERPROFILE"));
          
         int line = 1;
         bool correct = false;
         int traverse = 0;
+
+        private async Task<string> WaitInput()
+        {
+            inputHandler = new TaskCompletionSource<string>();
+
+            return await inputHandler.Task;
+        }
         
 
         string GetHistoryPath() //to grab the history file, for our dynamic history look up using arrow keys
@@ -70,6 +77,30 @@ namespace Console
             }
         }
 
+        private void initDview(DirectoryInfo currPath,TreeNode parent)
+        {
+
+           
+           foreach(var dir in currPath.GetDirectories())
+           {
+                dirview1.Nodes[0].Nodes.Add($"[DIR] {dir.Name}");
+                
+           }
+
+           foreach(var files in currPath.GetFiles())
+            {
+                if (!Utility.hasUnwanted(files.Name))
+                {
+                    dirview1.Nodes[0].Nodes.Add($"[FILE] {files.Name}");
+                }
+                else
+                {
+                    continue;
+                }
+            }
+    
+        }
+
         public Form1()
         {
             try
@@ -77,12 +108,22 @@ namespace Console
                 InitializeComponent();
                 init();
                 ReadHistory();
+
+                dirview1.BeginUpdate();
+
+                TreeNode parentNode = dirview1.Nodes.Add(currentDirectory.Name);
+                initDview(currentDirectory, parentNode);
+
+                dirview1.EndUpdate();
+
+
                 lb_path.Text = currentDirectory.FullName;
                 rtb_log.Text += "CLI" + Environment.NewLine + "Logs:" + Environment.NewLine;
                 rtb_output.Text = "Welcome to Console Explorer" + Environment.NewLine;
                 rtb_output.Text += "Type 'help' to begin exploring!" + Environment.NewLine + Environment.NewLine;
                 string[] cmds = { "echo", "exit", "copy", "create", "move", "export", "delete", "clear", "change", "list", "current", "help" };
                 syntax.AddRange(cmds);
+              
 
    
                 var assets = GetAssetsFolder();
@@ -134,6 +175,27 @@ namespace Console
             {
                 print("Failed to read history",true);
             }
+        }
+
+        void ChangeDir(DirectoryInfo ndir)
+        {
+            dirview1.BeginUpdate();
+
+            dirview1.Nodes.Clear();
+
+            dirview1.Nodes.Add(ndir.Name);
+
+            foreach(var dir in ndir.GetDirectories())
+            {
+                dirview1.Nodes[0].Nodes.Add($"[DIR] {dir.Name}");
+            }
+
+            foreach(var file in ndir.GetFiles())
+            {
+                dirview1.Nodes[0].Nodes.Add($"[FILE] {file.Name}");
+            }
+
+            dirview1.EndUpdate();
         }
 
         private bool isExtra(string inp)
@@ -195,13 +257,19 @@ namespace Console
             File.AppendAllText(historyPath, command + Environment.NewLine); // we always append new text other wise its all going to be stored in one line
         }
 
-        private void btn_submit_Click(object sender, EventArgs e) //this is where it all happens, the main loop is called, then the input gets evaluated
+        private async void btn_submit_Click(object sender, EventArgs e) //this is where it all happens, the main loop is called, then the input gets evaluated
         {
-            input = tb_input1.Text;   
-            WriteHistory(input);
-            mainLoop();
-            evaluate(input);
-            tb_input1.Text = string.Empty;
+            try
+            {
+                input = tb_input1.Text;
+                WriteHistory(input);
+                await mainLoop();
+                evaluate(input);
+                tb_input1.Text = string.Empty;
+            }catch(Exception ex)
+            {
+                print(ex.Message,true);
+            }
         }
 
         private void help() //for user convenience
@@ -220,6 +288,7 @@ namespace Console
             print("edit <file-path> - edit any text files.");
             print("view <file-path> - view any image in your FS");
             print("exit - Exits the application.");
+            print("Note: Double click any node in Directory View to insert node name into your input.");
         }
 
         private bool IsEnvVar(string input) //this is our env var checker to make sure that the said token is actually a valid env var
@@ -271,8 +340,8 @@ namespace Console
          
             List<Delegate> tmp = new List<Delegate>();
             tmp.Add(new Action<string,bool,bool>((s,v,d) => print(s,v,d)));
-            tmp.Add(new Action<string>(c => getInput())); 
-            
+            tmp.Add(new Func<Task<string>>(WaitInput));
+
             return tmp; 
         }
 
@@ -284,6 +353,11 @@ namespace Console
             commands.Add("input", comd.TestInput);
             commands.Add("view", comd.showImage);
 
+        }
+
+        public void WaitforInput()
+        {
+            
         }
 
         private void mainMap(string inp) // Our command executor for other commands
@@ -307,11 +381,13 @@ namespace Console
             }
 
             commands[inp]();
+            
         }
 
-        private string getInput()
+        private object getInput()
         {
-            return tb_input1.Text;
+            object input = tb_input1.Text.GetType();
+            return input;
         }
 
         private string handleQoute(string[] arr)
@@ -327,7 +403,7 @@ namespace Console
             return tmp;
         }
 
-        private void mainLoop() //this is slowly becoming a god function, I must do something about it.
+        private async Task mainLoop() //this is slowly becoming a god function, I must do something about it.
         {
             try
             {
@@ -357,10 +433,6 @@ namespace Console
                         return;
                     }
 
-                    if (cmd[1].Contains('"'))
-                    {
-                        handleQoute(cmd);
-                    }
 
                     string newPath;
 
@@ -386,6 +458,8 @@ namespace Console
 
                     currentDirectory = newDir;
                     lb_path.Text = currentDirectory.FullName;
+
+                    ChangeDir(newDir);
                 }
                 else if (cmd[0].ToLower() == "help")
                 {
@@ -677,6 +751,11 @@ namespace Console
                         ed.Show();
                     }
 
+                } else if (cmd[0].ToLower() == "run")
+                {
+                    string scriptPath = Path.Combine(currentDirectory.FullName, cmd[1]);
+                    Interpret inter = new Interpret(scriptPath,Acts());
+                    await inter.RunAsync();
                 }
                 else
                 {
@@ -704,59 +783,75 @@ namespace Console
 
         private void tb_input1_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)
+            try
             {
-                e.Handled = true; // prevent the beep sound
-                btn_submit.PerformClick(); // trigger the button click event
-                isUser = true;
-            }
-
-            if (e.KeyCode == Keys.Up)
-            {
-                if (history.Count > 0)
+                if (e.KeyCode == Keys.Enter)
                 {
-                    if (traverse < history.Count)
+                    e.Handled = true; // prevent the beep sound
+
+                    if (inputHandler != null && !inputHandler.Task.IsCompleted)
                     {
-                        traverse++;
-                        tb_input1.Text = history[history.Count - traverse];
-                        tb_input1.SelectionStart = tb_input1.Text.Length; // move cursor to end
+                        inputHandler.SetResult(tb_input1.Text);
+                        print(tb_input1.Text);
+                        tb_input1.Clear();
+                        return;
+                    }
+
+
+                    btn_submit.PerformClick(); // trigger the button click event
+                    isUser = true;
+                }
+
+                if (e.KeyCode == Keys.Up)
+                {
+                    if (history.Count > 0)
+                    {
+                        if (traverse < history.Count)
+                        {
+                            traverse++;
+                            tb_input1.Text = history[history.Count - traverse];
+                            tb_input1.SelectionStart = tb_input1.Text.Length; // move cursor to end
+                        }
                     }
                 }
-            }
-            else if (e.KeyCode == Keys.Down)
-            {
-                if (history.Count > 0)
+                else if (e.KeyCode == Keys.Down)
                 {
-                    if (traverse > 1)
+                    if (history.Count > 0)
                     {
-                        traverse--;
-                        tb_input1.Text = history[history.Count - traverse];
-                        tb_input1.SelectionStart = tb_input1.Text.Length; // move cursor to end
+                        if (traverse > 1)
+                        {
+                            traverse--;
+                            tb_input1.Text = history[history.Count - traverse];
+                            tb_input1.SelectionStart = tb_input1.Text.Length; // move cursor to end
+                        }
+                        else
+                        {
+                            traverse = 0;
+                            tb_input1.Text = string.Empty;
+                        }
                     }
-                    else
+                }
+
+                else if (e.KeyCode == Keys.ControlKey && e.KeyCode == Keys.C)
+                {
+
+                    if (!string.IsNullOrEmpty(rtb_output.Text))
                     {
-                        traverse = 0;
-                        tb_input1.Text = string.Empty;
+                        Clipboard.SetText(rtb_output.SelectedText);
                     }
                 }
-            }
 
-            else if(e.KeyCode == Keys.ControlKey && e.KeyCode == Keys.C)
-            {
-                
-                if (!string.IsNullOrEmpty(rtb_output.Text))
+
+                else if (e.KeyCode == Keys.ControlKey && e.KeyCode == Keys.V)
                 {
-                    Clipboard.SetText(rtb_output.SelectedText);
+                    if (!string.IsNullOrEmpty(Clipboard.GetText()))
+                    {
+                        tb_input1.Text += Clipboard.GetText();
+                    }
                 }
-            }
-
-
-            else if(e.KeyCode == Keys.ControlKey && e.KeyCode == Keys.V)
+            }catch(Exception ex)
             {
-                if (!string.IsNullOrEmpty(Clipboard.GetText()))
-                {
-                    tb_input1.Text += Clipboard.GetText();
-                }
+                print(ex.Message, true);
             }
         }
 
@@ -796,6 +891,36 @@ namespace Console
                 print(ex.Message, true);
             }
 
+        }
+
+        int click = 0;
+
+        private void dirview1_MouseDown(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                click += 1;
+                
+
+                if (click >= 2 && dirview1.SelectedNode != null)
+                {
+                    string[] name = dirview1.SelectedNode.Text.Split(' ');
+
+                    if (name[0] == currentDirectory.Name)
+                    {
+                        tb_input1.AppendText(name[0]);
+                        click = 0;
+                        return;
+                    }
+
+                    tb_input1.AppendText(name[1]);
+                    click = 0;
+                }
+            }
+            catch(Exception ex)
+            {
+                print(ex.Message, true);
+            }
         }
     }
 }
