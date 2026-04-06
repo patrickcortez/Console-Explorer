@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Text;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Runtime.InteropServices;
-using System.Runtime.Remoting.Messaging;
-using System.Web.UI.WebControls;
 using System.Windows.Forms;
 
 namespace Console

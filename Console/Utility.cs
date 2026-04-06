@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.IO;
-using System.Threading.Tasks;
+using System.Linq;
+using System.Text;
 using System.Windows.Forms;
-using System.Net.NetworkInformation;
 
 namespace Console
 {
