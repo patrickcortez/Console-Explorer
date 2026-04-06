@@ -17,6 +17,8 @@ up and down arrow keys.
 It also has *environmental variable expansion*, so you can export and use
 your variables in any command with ease.
 
+It has *Brace Matching* and Recursive Copying. Which would help improve the CLI and FS management.
+
 it has its own *Text Editor* and *Image Viewer*, so you can edit text files and view images instantly 
 while using **Console Explorer**.
 
