@@ -7,14 +7,14 @@ using System.Web.Configuration;
 using System.Windows.Forms;
 
 /*
- * This is the basic arithmetic hanlder of Console Explorer
+ * This is the arithmetic hanlder of Console Explorer
  * So i can use it in the interpreter and so that the user can properly do math.
  * I mean they probably wont but why not =D.
+ * We dont have any decimals yet, but soon probably.
  */
 
 namespace Console
 {
-
    
     internal class Arithmetic : IDisposable // The start of our beautiful math handler =D
     { // ngl I wish there was an auto arithmetic class in c#
@@ -24,17 +24,18 @@ namespace Console
         List<Tokens> tokens = new List<Tokens>();
         enum MathTypes //we define all the types in math
         {
-            Number,
-            Plus,
-            Minus,
-            Multiply,
-            Divide,
-            LPar,
-            RPar,
-            End // YEP i am not doing Power!
+            Number, //1 - 9
+            Plus, // addition
+            Minus, //Sub or negative
+            Multiply, // multiplication
+            Divide, //division
+            LPar, // left or starting parenthesis
+            RPar, // right or ending parenthesis
+            Power, // N^n power handling with Math
+            End // signify an expression has a valid ending and doesnt end with other token types
         }
 
-        public void Dispose()
+        public void Dispose() // to properly dispose of the lists we used
         {
             tokens.Clear();
             pos = 0;
@@ -44,13 +45,13 @@ namespace Console
         private struct Tokens // token definition: Type and value(if its a number)
         {
            public MathTypes type;
-           public int value; //yep i dont care, I AM NOT DOING DECIMALS NAH!
+           public int value; //We will use simple integers for now, no decimals yet.
             
 
-            public Tokens(MathTypes ntype,int nvalue = 0) // for convinience
+            public Tokens(MathTypes ntype,int nvalue = 0) // constructor, so we can easily add to our list: List.Add(new Tokens(n,n))
             {
-                type = ntype;
-                value = nvalue;
+                type = ntype; // Token types
+                value = nvalue; // value if token is number
             }
         }
 
@@ -61,14 +62,14 @@ namespace Console
                 return '\0';
             }
 
-            return pdata[pos]; //else we return the current character in the string
+            return pdata[pos]; //we return to keep tracking...
         }
 
         private void advance() // we should only advance as long as its lesser than the size of the string
         {
             if(pos < pdata.Length) // if our current position is lesser than the size of the string
             {
-                pos++; //then advance
+                pos++; //then advance position to next char
             }
         }
 
@@ -96,7 +97,7 @@ namespace Console
                 else if (pdata[pos] == '+') //addition
                 {
                     tokens.Add(new Tokens(MathTypes.Plus));
-                    advance();
+                    advance(); // always advance after its not a digit
                 }
                 else if (pdata[pos] == '-')
                 {
@@ -125,12 +126,16 @@ namespace Console
                     advance();
                 }else if (pdata[pos] == '(')
                 {
-                    tokens.Add(new Tokens(MathTypes.LPar));
+                    tokens.Add(new Tokens(MathTypes.LPar)); // starting parenthesis
                     advance();
                 }
                 else if (pdata[pos] == ')')
                 {
-                    tokens.Add(new Tokens(MathTypes.RPar));
+                    tokens.Add(new Tokens(MathTypes.RPar)); // closing
+                    advance();
+                }else if (pdata[pos] == '^')
+                {
+                    tokens.Add(new Tokens(MathTypes.Power));
                     advance();
                 }
                 else // strictly no letters or other special characters asides from: +,-,*,/,( or ).
@@ -149,13 +154,13 @@ namespace Console
         private Tokens currentToken() { // our navigator, which is the main driver for our engine, at start in points to the first token in the list(tokens)
             return  tokens[pos];
         }
-        private int Parse() // starts processing user expression and traversing our method ladder.
+        private int Parse() // starts processing user expression and recursively parse
         {
 
             return ParseAdd();
         }
 
-        private int ParseAdd() // Add/Sub handler, basically a ladder to parseBase()
+        private int ParseAdd() // Add/Sub handler, basically a ladder to parseBase() aka our recursing parser
         {
             int valueL = ParseMultiply();
 
@@ -179,7 +184,7 @@ namespace Console
 
         private int ParseMultiply() // Multiplication handler based in PEMDAS, before passing onto Add, check if there are any * operators
         {
-            int valueL = ParseBase();
+            int valueL = ParsePower();
             
             while(currentToken().type == MathTypes.Multiply || currentToken().type == MathTypes.Divide) //While its * or /, solve then advance until the 
             {
@@ -194,6 +199,25 @@ namespace Console
                 else
                 {
                     valueL = valueL / valueR;
+                }
+            }
+
+            return valueL;
+        }
+
+        private int ParsePower()
+        {
+            int valueL = ParseBase();
+
+            while(currentToken().type == MathTypes.Power)
+            {
+                MathTypes ops = currentToken().type;
+                advance();
+                int valueR = ParseBase();
+
+                if(ops == MathTypes.Power)
+                {
+                    valueL = (int)Math.Pow(valueL, valueR);
                 }
             }
 
